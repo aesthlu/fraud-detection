@@ -1,4 +1,5 @@
 import hashlib
+import time
 
 import mlflow
 from mlflow import MlflowClient
@@ -14,6 +15,8 @@ TRUSTED_TYPES = [
     "fraud_detection.features.FeatureBuilder",
     "imblearn.pipeline.Pipeline",
     "imblearn.combine._smote_enn.SMOTEENN",
+    "imblearn.over_sampling._smote.base.SMOTE",
+    "imblearn.under_sampling._prototype_selection._edited_nearest_neighbours.EditedNearestNeighbours",
     "xgboost.core.Booster",
     "xgboost.sklearn.XGBClassifier",
 ]
@@ -41,7 +44,7 @@ def run_training(cfg: dict) -> str:
     X_val, y_val = val.drop(columns=target), val[target]
     X_test, y_test = test.drop(columns=target), test[target]
 
-    with mlflow.start_run() as run:
+    with mlflow.start_run(run_name=f"xgb-{cfg['resampling']}") as run:
         # 1. Traçabilité : config, version des données, tailles des splits
         mlflow.log_params(flatten(cfg))
         mlflow.set_tag("data_md5", file_md5(cfg["data"]["path"]))
@@ -52,7 +55,9 @@ def run_training(cfg: dict) -> str:
 
         # 2. Entraînement
         model = build_model(cfg, y_train)
+        start = time.perf_counter()
         model.fit(X_train, y_train)
+        mlflow.log_metric("fit_seconds", time.perf_counter() - start)
 
         # 3. Seuil choisi sur la validation, performance mesurée sur le test
         threshold = business_threshold(y_val, model.predict_proba(X_val)[:, 1], cost_fn, cost_fp)
@@ -82,7 +87,9 @@ def run_training(cfg: dict) -> str:
         client.set_model_version_tag(model_name, version, "threshold", f"{threshold:.4f}")
 
         print(f"Run {run.info.run_id} — test AP = {metrics['average_precision']:.4f}, "
-              f"seuil = {threshold:.2f}")
+              f"seuil = {threshold:.3f}")
 
-    promote_if_better(client, model_name, version, cfg["mlflow"]["promotion_metric"])
+    promote_if_better(
+        client, model_name, version, cfg["mlflow"]["promotion_metric"], cfg["mlflow"]["promotion_mode"]
+    )
     return run.info.run_id

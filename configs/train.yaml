@@ -31,4 +31,5 @@ mlflow:
   tracking_uri: sqlite:///mlflow.db
   experiment_name: fraud_detection
   registered_model_name: fraud-detection
-  promotion_metric: test_average_precision
+  promotion_metric: test_business_cost
+  promotion_mode: minimize  # "minimize" (coût) ou "maximize" (AUC, AP...)
