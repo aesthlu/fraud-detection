@@ -20,13 +20,15 @@ def build_model(cfg: dict, y_train: pd.Series) -> Pipeline:
     else:
         scale_pos_weight = (y_train == 0).sum() / (y_train == 1).sum()
 
-    steps.append((
-        "classifier",
-        XGBClassifier(
-            **cfg["model"],
-            objective="binary:logistic",
-            eval_metric="aucpr",
-            scale_pos_weight=scale_pos_weight,
-        ),
-    ))
+    steps.append(
+        (
+            "classifier",
+            XGBClassifier(
+                **cfg["model"],
+                objective="binary:logistic",
+                eval_metric="aucpr",
+                scale_pos_weight=scale_pos_weight,
+            ),
+        )
+    )
     return Pipeline(steps)

@@ -1,5 +1,7 @@
-import pandas as pd
 import os
+
+import pandas as pd
+
 
 def load_data(path: str) -> pd.DataFrame:
     if not os.path.exists(path):
@@ -22,6 +24,7 @@ def basic_data_checks(df: pd.DataFrame):
 
     print("\n=== TIME RANGE ===")
     print(df["Time"].min(), "→", df["Time"].max())
+
 
 def temporal_split(df: pd.DataFrame, train_ratio: float, val_ratio: float):
     """Découpe en train / validation / test selon le temps (pas de mélange aléatoire).

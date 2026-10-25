@@ -3,6 +3,7 @@ import time
 
 import mlflow
 from mlflow import MlflowClient
+from mlflow.data.pandas_dataset import from_pandas
 from mlflow.models import infer_signature
 
 from fraud_detection.config import flatten
@@ -48,7 +49,7 @@ def run_training(cfg: dict) -> str:
         # 1. Traçabilité : config, version des données, tailles des splits
         mlflow.log_params(flatten(cfg))
         mlflow.set_tag("data_md5", file_md5(cfg["data"]["path"]))
-        mlflow.log_input(mlflow.data.from_pandas(train, targets=target, name="train"), context="training")
+        mlflow.log_input(from_pandas(train, targets=target, name="train"), context="training")
         for name, split in [("train", train), ("val", val), ("test", test)]:
             mlflow.log_metric(f"{name}_rows", len(split))
             mlflow.log_metric(f"{name}_fraud_rate", split[target].mean())
@@ -86,8 +87,9 @@ def run_training(cfg: dict) -> str:
         version = str(info.registered_model_version)
         client.set_model_version_tag(model_name, version, "threshold", f"{threshold:.4f}")
 
-        print(f"Run {run.info.run_id} — test AP = {metrics['average_precision']:.4f}, "
-              f"seuil = {threshold:.3f}")
+        print(
+            f"Run {run.info.run_id} — test AP = {metrics['average_precision']:.4f}, seuil = {threshold:.3f}"
+        )
 
     promote_if_better(
         client, model_name, version, cfg["mlflow"]["promotion_metric"], cfg["mlflow"]["promotion_mode"]

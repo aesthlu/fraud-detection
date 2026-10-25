@@ -4,6 +4,13 @@ from mlflow.exceptions import MlflowException
 CHAMPION = "champion"
 
 
+def _run_id(model_version) -> str:
+    """run_id d'une version du registry (une version créée hors run n'en a pas)."""
+    if model_version.run_id is None:
+        raise ValueError(f"La version {model_version.version} n'est liée à aucun run MLflow")
+    return model_version.run_id
+
+
 def promote_if_better(
     client: MlflowClient, model_name: str, version: str, metric: str, mode: str = "minimize"
 ) -> bool:
@@ -16,7 +23,7 @@ def promote_if_better(
     if mode not in ("minimize", "maximize"):
         raise ValueError(f"promotion_mode doit valoir 'minimize' ou 'maximize', pas {mode!r}")
 
-    new_run = client.get_run(client.get_model_version(model_name, version).run_id)
+    new_run = client.get_run(_run_id(client.get_model_version(model_name, version)))
     new_score = new_run.data.metrics[metric]
 
     try:
@@ -25,12 +32,14 @@ def promote_if_better(
         champion = None  # premier modèle enregistré
 
     if champion is not None:
-        champion_score = client.get_run(champion.run_id).data.metrics.get(metric)
+        champion_score = client.get_run(_run_id(champion)).data.metrics.get(metric)
         if champion_score is not None:
             is_better = new_score < champion_score if mode == "minimize" else new_score > champion_score
             if not is_better:
-                print(f"v{version} ({metric}={new_score:.4f}) ne bat pas le champion "
-                      f"v{champion.version} ({champion_score:.4f}) : pas de promotion.")
+                print(
+                    f"v{version} ({metric}={new_score:.4f}) ne bat pas le champion "
+                    f"v{champion.version} ({champion_score:.4f}) : pas de promotion."
+                )
                 return False
 
     client.set_registered_model_alias(model_name, CHAMPION, version)
