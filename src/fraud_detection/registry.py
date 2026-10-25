@@ -7,6 +7,13 @@ from mlflow import MlflowClient
 from mlflow.exceptions import MlflowException
 
 CHAMPION = "champion"
+EXPORTED_METRICS = {
+    "test_business_cost",
+    "test_average_precision",
+    "test_roc_auc",
+    "test_precision",
+    "test_recall",
+}
 
 
 def _run_id(model_version) -> str:
@@ -70,11 +77,15 @@ def export_champion(client: MlflowClient, model_name: str, output_dir: str | Pat
         artifact_uri=f"models:/{model_name}@{CHAMPION}", dst_path=str(output_dir)
     )
 
+    # Métriques de test du run : elles suivent le modèle jusqu'en production
+    # (notes de release, /health) et serviront de référence au monitoring.
+    run_metrics = client.get_run(_run_id(champion)).data.metrics
     metadata = {
         "model_name": model_name,
         "model_version": champion.version,
         "run_id": champion.run_id,
         "threshold": float(threshold),
+        "metrics": {k: v for k, v in sorted(run_metrics.items()) if k in EXPORTED_METRICS},
     }
     (output_dir / "metadata.json").write_text(json.dumps(metadata, indent=2))
     return metadata

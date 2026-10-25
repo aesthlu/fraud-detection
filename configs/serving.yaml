@@ -1,0 +1,4 @@
+# Modèle embarqué dans l'image Docker publiée par le workflow CD.
+# C'est le nom d'une release GitHub créée par scripts/release_model.sh.
+# Changer cette valeur dans une PR, puis merger = déployer un autre modèle.
+model_release: none

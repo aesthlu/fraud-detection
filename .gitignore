@@ -27,3 +27,4 @@ mlflow.db
 
 # Modèle exporté pour le serving (fraud-detection export)
 model/
+model.tar.gz
