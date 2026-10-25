@@ -1,0 +1,55 @@
+# Intégration continue : à chaque push sur main et chaque pull request,
+# on vérifie la qualité du code puis on lance tous les tests.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Un nouveau push annule le run précédent encore en cours sur la même branche.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Le workflow lit le code, rien de plus (principe du moindre privilège).
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint et typage
+    runs-on: ubuntu-latest
+    steps:
+      # Actions épinglées par SHA : un tag (v7) peut être déplacé, pas un commit.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.22"
+          enable-cache: true
+      # --locked : échoue si uv.lock n'est plus à jour avec pyproject.toml
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy src
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    env:
+      MLFLOW_DISABLE_AGENT_HINT: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.22"
+          enable-cache: true
+      - run: uv sync --locked
+      # Les tests génèrent leurs propres données : pas besoin de creditcard.csv.
+      - run: uv run pytest -p no:warnings --junitxml=test-results.xml
+      - name: Publier le rapport de tests
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-results
+          path: test-results.xml

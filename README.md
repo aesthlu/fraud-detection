@@ -1,5 +1,7 @@
 # fraud-detection
 
+[![CI](https://github.com/aesthlu/fraud-detection/actions/workflows/ci.yml/badge.svg)](https://github.com/aesthlu/fraud-detection/actions/workflows/ci.yml)
+
 Détection de fraude sur des transactions par carte bancaire (XGBoost), utilisée comme projet d'apprentissage MLOps.
 
 ## Installation
