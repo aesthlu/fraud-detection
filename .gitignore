@@ -1,0 +1,26 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# OS / outils
+.DS_Store
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Données (trop lourdes pour Git : 144 Mo > limite GitHub de 100 Mo)
+data/
+
+# Artefacts produits par le pipeline
+models/
+mlruns/
+mlartifacts/
+mlflow.db
+*.png
