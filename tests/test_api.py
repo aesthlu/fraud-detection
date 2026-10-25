@@ -38,6 +38,7 @@ def test_health_reports_loaded_model(client):
     assert body["status"] == "ok"
     assert body["model_version"] == 1
     assert 0 < body["threshold"] < 1
+    assert "test_business_cost" in body["metrics"]
 
 
 def test_predict_flags_obvious_fraud(client, fraud, normal):
