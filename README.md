@@ -22,6 +22,29 @@ et le placer dans `data/creditcard.csv`.
 uv run mlflow ui
 ```
 
+## Serving (API)
+
+```bash
+uv run fraud-detection export                      # copie le champion du registry dans model/
+uv run uvicorn fraud_detection.api:app --reload    # API sur http://localhost:8000/docs
+```
+
+Avec Docker :
+
+```bash
+uv run fraud-detection export
+docker build -t fraud-detection-api .
+docker run -p 8000:8000 fraud-detection-api
+```
+
+| Endpoint | Rôle |
+|---|---|
+| `GET /health` | Version du modèle chargé et seuil de décision |
+| `POST /predict` | Une transaction (`Time`, `V1`…`V28`, `Amount`) → probabilité + décision |
+| `POST /predict/batch` | Jusqu'à 1000 transactions |
+
+La décision `is_fraud` applique le seuil métier choisi sur la validation à l'entraînement.
+
 ## Développement
 
 ```bash
