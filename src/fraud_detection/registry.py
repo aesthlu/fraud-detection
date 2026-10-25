@@ -1,3 +1,8 @@
+import json
+import shutil
+from pathlib import Path
+
+import mlflow
 from mlflow import MlflowClient
 from mlflow.exceptions import MlflowException
 
@@ -45,3 +50,31 @@ def promote_if_better(
     client.set_registered_model_alias(model_name, CHAMPION, version)
     print(f"v{version} ({metric}={new_score:.4f}) est le nouveau champion.")
     return True
+
+
+def export_champion(client: MlflowClient, model_name: str, output_dir: str | Path) -> dict:
+    """Copie le modèle champion dans un dossier local, avec ses métadonnées.
+
+    L'API charge ce dossier : elle n'a pas besoin d'accéder au serveur MLflow
+    pour démarrer, et l'image Docker contient exactement le modèle déployé.
+    """
+    output_dir = Path(output_dir)
+    champion = client.get_model_version_by_alias(model_name, CHAMPION)
+    threshold = champion.tags.get("threshold")
+    if threshold is None:
+        raise ValueError(f"La version {champion.version} n'a pas de tag 'threshold'")
+
+    if output_dir.exists():
+        shutil.rmtree(output_dir)
+    mlflow.artifacts.download_artifacts(
+        artifact_uri=f"models:/{model_name}@{CHAMPION}", dst_path=str(output_dir)
+    )
+
+    metadata = {
+        "model_name": model_name,
+        "model_version": champion.version,
+        "run_id": champion.run_id,
+        "threshold": float(threshold),
+    }
+    (output_dir / "metadata.json").write_text(json.dumps(metadata, indent=2))
+    return metadata

@@ -1,0 +1,15 @@
+# Seul le nécessaire est envoyé au build Docker (le CSV fait 144 Mo).
+.git
+.github
+.venv
+data/
+mlruns/
+mlartifacts/
+mlflow.db
+tests/
+**/__pycache__
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.DS_Store
+*.png

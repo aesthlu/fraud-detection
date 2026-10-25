@@ -10,19 +10,15 @@ requires-python = ">=3.12,<3.14"
 dependencies = [
     "fastapi>=0.136.3",
     "imbalanced-learn>=0.14.0",
-    "joblib>=1.6.0",
-    "lightgbm>=4.7.0",
     "matplotlib>=3.11.2",
     "mlflow>=3.17.2",
     "numpy>=2.5.4",
     "pandas>=3.1.0",
     "pyyaml>=6.0.3",
     "scikit-learn>=1.9.1",
-    "scipy>=1.18.1",
-    "seaborn>=0.13.2",
-    "shap>=0.54.1",
     "uvicorn>=0.54.0",
-    "xgboost>=3.4.1",
+    "xgboost>=3.4.1 ; sys_platform == 'darwin'",
+    "xgboost-cpu>=3.4.1 ; sys_platform != 'darwin'",
 ]
 
 [project.scripts]
@@ -34,6 +30,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "httpx2>=2.16.0",
     "mypy>=2.4.0",
     "pandas-stubs>=3.0.5.260914",
     "pre-commit>=4.7.0",

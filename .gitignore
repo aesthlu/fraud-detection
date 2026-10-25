@@ -24,3 +24,6 @@ mlruns/
 mlartifacts/
 mlflow.db
 *.png
+
+# Modèle exporté pour le serving (fraud-detection export)
+model/
