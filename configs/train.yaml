@@ -1,0 +1,34 @@
+# Configuration d'entraînement : tout ce qui influence le modèle est ici,
+# et chaque valeur est enregistrée dans MLflow pour pouvoir rejouer un run.
+
+data:
+  path: data/creditcard.csv
+  target: Class
+
+# Découpage temporel : on entraîne sur le passé, on valide/teste sur le futur.
+split:
+  train_ratio: 0.6   # 60 % les plus anciens -> entraînement
+  val_ratio: 0.2     # 20 % suivants        -> choix du seuil
+                     # 20 % les plus récents -> test final
+
+# Gestion du déséquilibre : "none" (scale_pos_weight seul) ou "smoteenn"
+resampling: none
+
+model:
+  n_estimators: 300
+  max_depth: 6
+  learning_rate: 0.05
+  subsample: 0.8
+  colsample_bytree: 0.8
+  random_state: 42
+
+# Coût métier d'une erreur, utilisé pour choisir le seuil de décision
+costs:
+  false_negative: 100  # fraude non détectée
+  false_positive: 1    # client légitime bloqué à tort
+
+mlflow:
+  tracking_uri: sqlite:///mlflow.db
+  experiment_name: fraud_detection
+  registered_model_name: fraud-detection
+  promotion_metric: test_average_precision

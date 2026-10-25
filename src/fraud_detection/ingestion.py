@@ -22,3 +22,18 @@ def basic_data_checks(df: pd.DataFrame):
 
     print("\n=== TIME RANGE ===")
     print(df["Time"].min(), "→", df["Time"].max())
+
+def temporal_split(df: pd.DataFrame, train_ratio: float, val_ratio: float):
+    """Découpe en train / validation / test selon le temps (pas de mélange aléatoire).
+
+    Un split aléatoire laisserait le modèle « voir le futur » : en production,
+    on prédit toujours des transactions postérieures aux données d'entraînement.
+    """
+    train_end = df["Time"].quantile(train_ratio)
+    val_end = df["Time"].quantile(train_ratio + val_ratio)
+
+    train = df[df["Time"] <= train_end]
+    val = df[(df["Time"] > train_end) & (df["Time"] <= val_end)]
+    test = df[df["Time"] > val_end]
+
+    return train, val, test
